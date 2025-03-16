@@ -1,0 +1,60 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // まずteamsテーブルが存在するか確認
+        if (!Schema::hasTable('teams')) {
+            Schema::create('teams', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('logo_path')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        // 次にplayersテーブルが存在するか確認
+        if (!Schema::hasTable('players')) {
+            Schema::create('players', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('image_path');
+                $table->foreignId('team_id')->constrained();
+                $table->timestamps();
+            });
+        }
+
+        // positionsテーブルが存在するか確認
+        if (!Schema::hasTable('positions')) {
+            Schema::create('positions', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
+        // 最後に中間テーブルを作成
+        Schema::create('player_position', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('player_id')->constrained()->onDelete('cascade');
+            $table->foreignId('position_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('positions');
+    }
+};
