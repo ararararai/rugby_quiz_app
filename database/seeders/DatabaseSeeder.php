@@ -10,6 +10,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             SungoliathPlayerSeeder::class,
+            SpearsPlayerSeeder::class,
+
         ]);
     }
 }

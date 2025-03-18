@@ -26,8 +26,8 @@ class QuizController extends Controller
 
             // 指定されたチームの選手からランダムに1人を選択（正解）
             $correctPlayer = Player::where('team_id', $teamId)
-                                  ->inRandomOrder()
-                                  ->first();
+                ->inRandomOrder()
+                ->first();
 
             if (!$correctPlayer) {
                 return response()->json(['error' => 'このチームの選手データがありません'], 404);
@@ -37,10 +37,10 @@ class QuizController extends Controller
 
             // 同じチームの他の選手から3人をランダムに選択（選択肢）
             $teamPlayers = Player::where('team_id', $correctPlayer->team_id)
-                                ->where('id', '!=', $correctPlayer->id)
-                                ->inRandomOrder()
-                                ->take(3)
-                                ->get();
+                ->where('id', '!=', $correctPlayer->id)
+                ->inRandomOrder()
+                ->take(3)
+                ->get();
 
             // 選択肢が3人に満たない場合、ダミーデータで補完
             while ($teamPlayers->count() < 3) {
@@ -59,7 +59,7 @@ class QuizController extends Controller
                     'team_name' => $teamName,
                     'correct_id' => $correctPlayer->id
                 ],
-                'choices' => $choices->map(function($player) {
+                'choices' => $choices->map(function ($player) {
                     return [
                         'id' => $player->id,
                         'name' => $player->name
@@ -107,4 +107,28 @@ class QuizController extends Controller
         return view('quiz.team-select', compact('teams'));
     }
 
+    public function start($teamId)
+    {
+        $team = Team::findOrFail($teamId);
+        $playerCount = Player::where('team_id', $teamId)->count();
+
+        return view('quiz.start', compact('team', 'playerCount'));
+    }
+
+    public function play($teamId)
+    {
+        $team = Team::findOrFail($teamId);
+        $playerCount = Player::where('team_id', $teamId)->count();
+
+        return view('quiz.index', compact('teamId', 'playerCount'));
+    }
+    public function result(Request $request, $teamId)
+    {
+        $team = Team::findOrFail($teamId);
+        $totalQuestions = $request->query('total', 0);
+        $correctCount = $request->query('correct', 0);
+        $percentage = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
+
+        return view('quiz.result', compact('team', 'totalQuestions', 'correctCount', 'percentage'));
+    }
 }

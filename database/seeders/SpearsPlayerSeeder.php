@@ -7,18 +7,18 @@ use App\Models\Player;
 use App\Models\Team;
 use Illuminate\Support\Facades\File;
 
-class SungoliathPlayerSeeder extends Seeder
+class SpearsPlayerSeeder extends Seeder
 {
     public function run(): void
     {
-        // サンゴリアスのチームを取得またはインサート
+        // スピアーズのチームを取得またはインサート
         $team = Team::firstOrCreate(
-            ['name' => 'サントリーサンゴリアス'],
-            ['logo_path' => 'teams/logo_sungoliath.png']
+            ['name' => 'クボタスピアーズ船橋・東京ベイ'],
+            ['logo_path' => 'teams/logo_spears.png']
         );
 
         // CSVファイルのパス
-        $csvPath = database_path('seeders/csv/sungoliath_members.csv');
+        $csvPath = database_path('seeders/csv/spears_members.csv');
 
         if (!File::exists($csvPath)) {
             $this->command->error('CSVファイルが見つかりません: ' . $csvPath);
@@ -34,18 +34,18 @@ class SungoliathPlayerSeeder extends Seeder
         // 各行を処理
         foreach ($csvData as $row) {
             // CSVの各列のデータを取得 (画像ファイル名と名前のみ)
-            $imagePath = $row[0] ?? 'logo_sungoliath.jpg';
+            $imagePath = $row[0] ?? 'logo_spears.png';
             $name = $row[1] ?? '';
 
             // 選手情報の作成
             if (!empty($name)) {
                 Player::firstOrCreate(
                     ['name' => $name, 'team_id' => $team->id],
-                    ['image_path' => 'players/sungoliath/' . $imagePath]
+                    ['image_path' => 'players/spears/' . $imagePath]
                 );
             }
         }
 
-        $this->command->info('サンゴリアス選手のデータをインポートしました');
+        $this->command->info('スピアーズ選手のデータをインポートしました');
     }
 }
