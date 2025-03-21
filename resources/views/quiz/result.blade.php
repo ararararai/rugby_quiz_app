@@ -79,8 +79,40 @@
         </div>
 
         <div class="text-center">
-            <a href="{{ route('team.select') }}" class="btn btn-secondary btn-lg action-btn">別のチームを選択</a>
             <a href="{{ route('quiz.play', ['team_id' => $team->id]) }}" class="btn btn-primary btn-lg action-btn">もう一度プレイ</a>
+            @if(count($wrongAnswers) > 0)
+                @php
+                    // 間違えた選手のIDのみを抽出して確実に整数値に
+                    $wrongPlayerIds = [];
+                    foreach ($wrongAnswers as $player) {
+                        if (isset($player['id']) && is_numeric($player['id'])) {
+                            $wrongPlayerIds[] = (int)$player['id'];
+                        }
+                    }
+                    // 重複を削除
+                    $wrongPlayerIds = array_values(array_unique($wrongPlayerIds));
+                    // 配列の値が空でないことを確認
+                    $wrongPlayerIds = array_values(array_filter($wrongPlayerIds));
+                    // デバッグ情報
+                    error_log('Wrong player IDs for replay: ' . json_encode($wrongPlayerIds));
+                @endphp
+                @if(count($wrongPlayerIds) > 0)
+                    @php
+                        // JSON形式に変換して安全にエンコード
+                        $encodedWrongPlayerIds = json_encode($wrongPlayerIds, JSON_NUMERIC_CHECK);
+                        error_log('Encoded wrong player IDs: ' . $encodedWrongPlayerIds);
+                        
+                        // 間違えた選手で再度プレイするルートを構築
+                        $wrongOnlyUrl = route('quiz.play', [
+                            'team_id' => $team->id, 
+                            'wrong_only' => 'true', 
+                            'wrong_answers' => $encodedWrongPlayerIds
+                        ]);
+                        error_log('Replay URL: ' . $wrongOnlyUrl);
+                    @endphp
+                    <a href="{{ $wrongOnlyUrl }}" class="btn btn-warning btn-lg action-btn">間違えた選手で再度プレイ</a>
+                @endif
+            @endif
         </div>
     </div>
 

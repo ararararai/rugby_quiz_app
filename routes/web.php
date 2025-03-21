@@ -18,3 +18,12 @@ Route::get('/quiz/question', [QuizController::class, 'getQuestion'])->name('quiz
 Route::post('/quiz/check', [QuizController::class, 'checkAnswer'])->name('quiz.check');
 // 結果表示ページ
 Route::get('/quiz/result/{team_id}', [QuizController::class, 'result'])->name('quiz.result');
+
+// テスト用クイズルート
+Route::get('/test-quiz', function () {
+    $team = App\Models\Team::where('name', 'テストチーム')->first();
+    if ($team) {
+        return redirect()->route('quiz.play', ['team_id' => $team->id]);
+    }
+    return redirect()->route('team.select');
+})->name('test.quiz');

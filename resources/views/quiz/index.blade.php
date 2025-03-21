@@ -141,7 +141,40 @@
             let correctCount = 0;
             let wrongAnswers = [];
             let askedPlayerIds = [];
-
+            
+            // URLパラメータから「間違えた選手のみモード」の設定を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const wrongOnlyParam = urlParams.get('wrong_only');
+            // 文字列'true'または'1'の場合にtrueとして扱う
+            const isWrongOnly = wrongOnlyParam === 'true' || wrongOnlyParam === '1';
+            
+            console.log('URL wrong_only parameter:', wrongOnlyParam);
+            console.log('Resolved isWrongOnly value:', isWrongOnly);
+            
+            let wrongAnswersData = [];
+            let wrongPlayerIds = [];
+            
+            // URLから間違えた選手の情報を取得
+            const wrongAnswersParam = new URLSearchParams(window.location.search).get('wrong_answers');
+            console.log('Wrong answers param from URL:', wrongAnswersParam);
+            
+            if (isWrongOnly && wrongAnswersParam) {
+                try {
+                    // wrongAnswersParamは数値の配列のみを含む文字列
+                    wrongPlayerIds = JSON.parse(decodeURIComponent(wrongAnswersParam));
+                    console.log('Parsed wrong player IDs:', wrongPlayerIds);
+                    
+                    // 型変換を確認（整数値であることを確認）
+                    wrongPlayerIds = wrongPlayerIds.map(id => parseInt(id, 10));
+                    console.log('Converted wrong player IDs:', wrongPlayerIds);
+                    
+                    // 重複を削除
+                    wrongPlayerIds = [...new Set(wrongPlayerIds)];
+                    console.log('Unique wrong player IDs:', wrongPlayerIds);
+                } catch (e) {
+                    console.error('Failed to parse wrong answers data:', e);
+                }
+            }
 
             // 進捗状況の更新
             function updateProgress() {
@@ -166,7 +199,7 @@
                 if (answeredCount >= playerCount) {
                     // 間違えた選手の情報をJSONとしてエンコードしてURLパラメータに追加
                     const wrongAnswersParam = encodeURIComponent(JSON.stringify(wrongAnswers));
-                    window.location.href = `/quiz/result/${teamId}?total=${playerCount}&correct=${correctCount}&wrong=${wrongAnswersParam}`;
+                    window.location.href = `/quiz/result/${teamId}?total=${answeredCount}&correct=${correctCount}&wrong=${wrongAnswersParam}`;
                     return;
                 }
                 loadingElement.style.display = 'block';
@@ -176,8 +209,54 @@
 
                 // 出題済みの選手IDをクエリパラメータとして追加
                 const askedIdsParam = askedPlayerIds.length > 0 ? `&asked_ids=${askedPlayerIds.join(',')}` : '';
+                
+                let url = `/quiz/question?team_id=${teamId}${askedIdsParam}`;
+                
+                console.log('isWrongOnly value before check:', isWrongOnly);
+                console.log('isWrongOnly type:', typeof isWrongOnly);
+                
+                // 間違えた選手のみモードの場合
+                if (isWrongOnly) {
+                    console.log('Wrong only mode active when fetching question');
+                    // 間違えた選手のIDを送信
+                    let idsToSend = [];
+                    
+                    // まず現在のwrongPlayerIdsをチェック（ページ内で記録されたもの）
+                    if (wrongPlayerIds.length > 0) {
+                        idsToSend = [...wrongPlayerIds];
+                        console.log('Using current wrong player IDs:', idsToSend);
+                    } 
+                    // 次にURLパラメータをチェック（前のページから渡されたもの）
+                    else if (wrongAnswersParam) {
+                        try {
+                            const parsedIds = JSON.parse(decodeURIComponent(wrongAnswersParam));
+                            if (Array.isArray(parsedIds) && parsedIds.length > 0) {
+                                idsToSend = parsedIds.map(id => parseInt(id, 10));
+                                console.log('Using wrong answers param from URL:', idsToSend);
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse wrong answers param:', e);
+                        }
+                    }
+                    
+                    // 有効なIDがある場合は送信
+                    if (idsToSend.length > 0) {
+                        // 重複を削除して整数値に変換
+                        idsToSend = [...new Set(idsToSend)].map(id => parseInt(id, 10));
+                        const idsJson = JSON.stringify(idsToSend);
+                        url += `&wrong_only=true&wrong_answers=${encodeURIComponent(idsJson)}`;
+                        console.log('Sending wrong player IDs JSON:', idsJson);
+                        console.log('Encoded URL parameter:', encodeURIComponent(idsJson));
+                    } else {
+                        // IDsがなくても、間違えた選手モードであることをマークする
+                        url += '&wrong_only=true';
+                        console.warn('No wrong player IDs available, but still using wrong_only mode');
+                    }
+                }
+                
+                console.log('Final URL being fetched:', url);
 
-                fetch('/quiz/question?team_id=' + teamId + askedIdsParam)
+                fetch(url)
                     .then(response => {
                         if (!response.ok) {
                             return response.text().then(text => {
@@ -270,12 +349,26 @@
                     correctCount++;
                 } else {
                     // 間違えた選手を記録
+                    const correctPlayerId = parseInt(data.correct_player.id, 10);
+                    console.log('Recording wrong answer:', correctPlayerId);
+                    
                     wrongAnswers.push({
-                        id: data.correct_player.id,
+                        id: correctPlayerId,
                         name: data.correct_player.name,
                         team: data.correct_player.team,
                         image: currentQuestion.question.player_image
                     });
+                    
+                    console.log('Updated wrong answers:', wrongAnswers);
+
+                    // 間違えた選手のIDのリストを更新（間違えた選手のみモード用）
+                    if (isWrongOnly) {
+                        // 間違えた選手のIDを追加（まだリストにない場合）
+                        if (!wrongPlayerIds.includes(correctPlayerId)) {
+                            wrongPlayerIds.push(correctPlayerId);
+                            console.log('Updated wrong player IDs:', wrongPlayerIds);
+                        }
+                    }
                 }
 
                 // 進捗状況の更新
