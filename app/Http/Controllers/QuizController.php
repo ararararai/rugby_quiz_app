@@ -15,6 +15,7 @@ class QuizController extends Controller
         return view('quiz.index', compact('teamId'));
     }
 
+
     public function getQuestion(Request $request)
     {
         try {
@@ -24,21 +25,34 @@ class QuizController extends Controller
                 return response()->json(['error' => 'チームIDが指定されていません'], 400);
             }
 
-            // 指定されたチームの選手からランダムに1人を選択（正解）
-            $correctPlayer = Player::where('team_id', $teamId)
-                ->inRandomOrder()
-                ->first();
-
-            if (!$correctPlayer) {
-                return response()->json(['error' => 'このチームの選手データがありません'], 404);
+            // 出題済みの選手IDを取得
+            $askedIds = [];
+            if ($request->has('asked_ids')) {
+                $askedIds = explode(',', $request->query('asked_ids'));
             }
+
+            // 未出題の選手からランダムに1人を選択（正解）
+            $query = Player::where('team_id', $teamId);
+            if (!empty($askedIds)) {
+                $query->whereNotIn('id', $askedIds);
+            }
+            $correctPlayer = $query->inRandomOrder()->first();
+
+            // 未出題の選手がいない場合、全出題完了とみなす
+            if (!$correctPlayer) {
+                return response()->json(['error' => '全ての選手が出題されました', 'completed' => true], 404);
+            }
+
+            // 正解の選手を出題済みリストに追加
+            $askedIds[] = $correctPlayer->id;
 
             $teamName = $correctPlayer->team->name;
 
             // 同じチームの他の選手から3人をランダムに選択（選択肢）
-            $teamPlayers = Player::where('team_id', $correctPlayer->team_id)
-                ->where('id', '!=', $correctPlayer->id)
-                ->inRandomOrder()
+            $teamPlayersQuery = Player::where('team_id', $correctPlayer->team_id)
+                ->where('id', '!=', $correctPlayer->id);
+
+            $teamPlayers = $teamPlayersQuery->inRandomOrder()
                 ->take(3)
                 ->get();
 
@@ -64,14 +78,14 @@ class QuizController extends Controller
                         'id' => $player->id,
                         'name' => $player->name
                     ];
-                })
+                }),
+                'asked_ids' => implode(',', $askedIds) // 出題済みリストを返す
             ]);
         } catch (\Exception $e) {
             Log::error('Quiz error: ' . $e->getMessage());
             return response()->json(['error' => 'エラーが発生しました: ' . $e->getMessage()], 500);
         }
     }
-
 
     public function checkAnswer(Request $request)
     {
@@ -129,6 +143,12 @@ class QuizController extends Controller
         $correctCount = $request->query('correct', 0);
         $percentage = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
 
-        return view('quiz.result', compact('team', 'totalQuestions', 'correctCount', 'percentage'));
+        // 間違えた選手の情報を取得
+        $wrongAnswers = [];
+        if ($request->has('wrong')) {
+            $wrongAnswers = json_decode($request->query('wrong'), true) ?: [];
+        }
+
+        return view('quiz.result', compact('team', 'totalQuestions', 'correctCount', 'percentage', 'wrongAnswers'));
     }
 }

@@ -57,12 +57,30 @@
                 @else
                     <div class="alert alert-warning">もっと練習が必要かもしれません。再挑戦してみましょう！</div>
                 @endif
+                <!-- 間違えた選手の一覧 -->
+                @if(count($wrongAnswers) > 0)
+                <div class="wrong-answers mt-5">
+                    <h3 class="text-center mb-4">間違えた選手</h3>
+                    <div class="row">
+                        @foreach($wrongAnswers as $player)
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <img src="{{ $player['image'] }}" class="card-img-top" alt="{{ $player['name'] }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ $player['name'] }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
         <div class="text-center">
-            <a href="{{ route('quiz.play', ['team_id' => $team->id]) }}" class="btn btn-primary btn-lg action-btn">もう一度プレイ</a>
             <a href="{{ route('team.select') }}" class="btn btn-secondary btn-lg action-btn">別のチームを選択</a>
+            <a href="{{ route('quiz.play', ['team_id' => $team->id]) }}" class="btn btn-primary btn-lg action-btn">もう一度プレイ</a>
         </div>
     </div>
 

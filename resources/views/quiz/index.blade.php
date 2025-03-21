@@ -139,6 +139,9 @@
             const playerCount = {{ $playerCount ?? 0 }};
             let answeredCount = 0;
             let correctCount = 0;
+            let wrongAnswers = [];
+            let askedPlayerIds = [];
+
 
             // 進捗状況の更新
             function updateProgress() {
@@ -161,7 +164,9 @@
 
                 // 全問題が終了した場合、結果画面に遷移
                 if (answeredCount >= playerCount) {
-                    window.location.href = `/quiz/result/${teamId}?total=${playerCount}&correct=${correctCount}`;
+                    // 間違えた選手の情報をJSONとしてエンコードしてURLパラメータに追加
+                    const wrongAnswersParam = encodeURIComponent(JSON.stringify(wrongAnswers));
+                    window.location.href = `/quiz/result/${teamId}?total=${playerCount}&correct=${correctCount}&wrong=${wrongAnswersParam}`;
                     return;
                 }
                 loadingElement.style.display = 'block';
@@ -169,7 +174,10 @@
                 resultContainer.style.display = 'none';
                 nextButton.style.display = 'none';
 
-                fetch('/quiz/question?team_id=' + teamId)
+                // 出題済みの選手IDをクエリパラメータとして追加
+                const askedIdsParam = askedPlayerIds.length > 0 ? `&asked_ids=${askedPlayerIds.join(',')}` : '';
+
+                fetch('/quiz/question?team_id=' + teamId + askedIdsParam)
                     .then(response => {
                         if (!response.ok) {
                             return response.text().then(text => {
@@ -181,6 +189,10 @@
                     .then(data => {
                         console.log('Question data:', data);
                         currentQuestion = data;
+                        // 出題済みリストを更新
+                        if (data.asked_ids) {
+                            askedPlayerIds = data.asked_ids.split(',').map(Number);
+                        }
                         displayQuestion(data);
                         loadingElement.style.display = 'none';
                         quizArea.style.display = 'block';
@@ -256,6 +268,14 @@
                 // 正解数のカウント
                 if (data.correct) {
                     correctCount++;
+                } else {
+                    // 間違えた選手を記録
+                    wrongAnswers.push({
+                        id: data.correct_player.id,
+                        name: data.correct_player.name,
+                        team: data.correct_player.team,
+                        image: currentQuestion.question.player_image
+                    });
                 }
 
                 // 進捗状況の更新
