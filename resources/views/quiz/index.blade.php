@@ -380,7 +380,7 @@
                         resultModal.show();
 
                         // 自動的に次の問題に進むタイマーをセット
-                        let secondsLeft = 3;
+                        let secondsLeft = 2;
                         document.getElementById('countdown').textContent = secondsLeft;
 
                         const timer = setInterval(() => {
