@@ -17,10 +17,10 @@ class LeagueOneTeamsSeeder extends Seeder
             ['name' => '神戸製鋼コベルコスティーラーズ神戸', 'logo_path' => 'teams/logo_kobesteelers.png'],
             ['name' => '浦安D-Rocks', 'logo_path' => 'teams/logo_d-rocks.png'],
             ['name' => '横浜キヤノンイーグルス', 'logo_path' => 'teams/logo_eagles.png'],
-            ['name' => '埼玉ワイルドナイツ', 'logo_path' => 'teams/logo_verblitz.png'],
+            ['name' => '埼玉ワイルドナイツ', 'logo_path' => 'teams/logo_wind_nights.png'],
             ['name' => 'ブラックラムズ東京', 'logo_path' => 'teams/logo_blackrams.png'],
             ['name' => '三重ホンダヒート', 'logo_path' => 'teams/logo_heat.png'],
-            ['name' => 'トヨタグリーンロケッツ', 'logo_path' => 'teams/logo_panasonic.png'],
+            ['name' => 'トヨタベルブリッツ', 'logo_path' => 'teams/logo_verblitz.png'],
             ['name' => '三菱重工相模原ダイナボアーズ', 'logo_path' => 'teams/logo_dynaboars.png']
         ];
 
