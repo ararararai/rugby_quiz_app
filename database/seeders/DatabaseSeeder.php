@@ -10,7 +10,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             LeagueOneTeamsSeeder::class,
+            JapanTeamPlayersSeeder::class,
             SungoliathSeeder::class,
+            BravelupusSeeder::class,
             SpearsSeeder::class,
         ]);
     }
