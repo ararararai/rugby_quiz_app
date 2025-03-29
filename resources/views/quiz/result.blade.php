@@ -50,6 +50,14 @@
                 <div class="score">{{ $correctCount }} / {{ $totalQuestions }}</div>
                 <div class="percentage">正解率: {{ $percentage }}%</div>
 
+                @php
+                    $questionCount = request()->get('question_count', 'all');
+                    $questionType = $questionCount === '20' ? '20問' : '全問題';
+                @endphp
+                <div class="question-type mb-3">
+                    <span class="badge bg-info">{{ $questionType }}モード</span>
+                </div>
+
                 @if($percentage >= 80)
                     <div class="alert alert-success">素晴らしい！選手をよく覚えていますね！</div>
                 @elseif($percentage >= 60)

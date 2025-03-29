@@ -223,6 +223,12 @@ class QuizController extends Controller
         $team = Team::findOrFail($teamId);
         $playerCount = Player::where('team_id', $teamId)->count();
         
+        // 問題数の設定を取得
+        $questionCount = request()->get('question_count', 'all');
+        if ($questionCount === '20') {
+            $playerCount = min(20, $playerCount);
+        }
+        
         // 間違えた選手のみモードの場合、playerCountを間違えた選手の数に設定
         $wrongOnly = request()->get('wrong_only');
         $wrongAnswers = request()->get('wrong_answers');

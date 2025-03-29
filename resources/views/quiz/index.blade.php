@@ -22,10 +22,15 @@
         }
 
         .choice-btn {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             width: 100%;
             text-align: left;
-            padding: 10px 15px;
+            padding: 12px 15px;
+            min-height: 48px;
+            white-space: normal;
+            word-wrap: break-word;
+            font-size: 16px;
+            line-height: 1.4;
         }
 
         .result-container {
@@ -50,14 +55,6 @@
 
 <body>
     <div class="container quiz-container">
-        <h1 class="text-center mb-4">ラグビー選手クイズ</h1>
-
-        <div class="text-center mb-3">
-            <a href="{{ route('team.select') }}" class="btn btn-outline-secondary btn-sm">
-                ← チーム選択に戻る
-            </a>
-        </div>
-
         <!-- 進捗表示 -->
         <div class="progress mb-4">
             <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
@@ -77,11 +74,9 @@
         <div id="quiz-area" style="display: none;">
             <div class="row mb-4">
                 <div class="col-md-8 offset-md-2">
-                    <h3 id="team-name" class="text-center mb-3"></h3>
                     <div class="text-center">
                         <img id="player-image" src="" alt="選手の写真" class="player-image">
                     </div>
-                    <h4 class="text-center mb-3">この選手は誰でしょう？</h4>
                 </div>
             </div>
 
@@ -96,6 +91,12 @@
             <div class="text-center mt-4">
                 <button id="next-btn" class="btn btn-primary" style="display: none;">次の問題</button>
             </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ route('team.select') }}" class="btn btn-outline-secondary">
+                ← チーム選択に戻る
+            </a>
         </div>
     </div>
 
@@ -125,7 +126,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             const loadingElement = document.getElementById('loading');
             const quizArea = document.getElementById('quiz-area');
-            const teamNameElement = document.getElementById('team-name');
             const playerImageElement = document.getElementById('player-image');
             const choicesContainer = document.getElementById('choices-container');
             const resultContainer = document.getElementById('result-container');
@@ -285,7 +285,6 @@
 
             // 問題を表示する関数
             function displayQuestion(data) {
-                teamNameElement.textContent = data.question.team_name + 'の選手';
                 playerImageElement.src = data.question.player_image;
 
                 choicesContainer.innerHTML = '';
