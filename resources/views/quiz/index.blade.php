@@ -377,31 +377,47 @@
 
                         // モーダルを表示
                         const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-                        resultModal.show();
+                        let timer = null;
+
+                        // 次の問題に進む関数
+                        const proceedToNextQuestion = () => {
+                            if (timer) {
+                                clearInterval(timer);
+                            }
+                            resultModal.hide();
+                            // 問題の状態をリセット
+                            choicesContainer.innerHTML = '';
+                            resultContainer.style.display = 'none';
+                            nextButton.style.display = 'none';
+                            // 少し遅延を入れて次の問題を取得
+                            setTimeout(() => {
+                                fetchQuestion();
+                            }, 100);
+                        };
 
                         // 自動的に次の問題に進むタイマーをセット
                         let secondsLeft = 2;
                         document.getElementById('countdown').textContent = secondsLeft;
 
-                        const timer = setInterval(() => {
+                        timer = setInterval(() => {
                             secondsLeft--;
                             document.getElementById('countdown').textContent = secondsLeft;
 
                             if (secondsLeft <= 0) {
-                                clearInterval(timer);
-                                resultModal.hide();
-                                fetchQuestion(); // 次の問題を取得
+                                proceedToNextQuestion();
                             }
                         }, 1000);
 
                         // 「次へ」ボタンのイベントリスナー
-                        document.getElementById('nextBtn').addEventListener('click', () => {
-                            clearInterval(timer);
-                            resultModal.hide();
-                            fetchQuestion(); // 次の問題を取得
-                        }, {
+                        const nextBtn = document.getElementById('nextBtn');
+                        // 既存のイベントリスナーを削除
+                        nextBtn.replaceWith(nextBtn.cloneNode(true));
+                        // 新しいイベントリスナーを追加
+                        document.getElementById('nextBtn').addEventListener('click', proceedToNextQuestion, {
                             once: true
                         });
+
+                        resultModal.show();
                     })
                     .catch(error => {
                         console.error('Error checking answer:', error);
