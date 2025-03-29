@@ -86,13 +86,16 @@ class QuizController extends Controller
                 Log::info('Using wrong only mode with IDs: ' . json_encode($wrongPlayerIds));
                 $query = Player::where('team_id', $teamId)->whereIn('id', $wrongPlayerIds);
                 
-                // 最後に出題された選手を避ける（可能であれば）
+                // 出題済みの選手を除外
                 if (!empty($askedIds)) {
-                    $lastAskedId = intval(end($askedIds));
-                    if (in_array($lastAskedId, $wrongPlayerIds) && count($wrongPlayerIds) > 1) {
-                        $query->where('id', '!=', $lastAskedId);
-                        Log::info('Avoiding last asked ID: ' . $lastAskedId);
-                    }
+                    $query->whereNotIn('id', $askedIds);
+                }
+                
+                // 出題可能な選手がいない場合、出題済みリストをリセット
+                if ($query->count() === 0) {
+                    $askedIds = [];
+                    $query = Player::where('team_id', $teamId)->whereIn('id', $wrongPlayerIds);
+                    Log::info('Reset asked IDs as no more players available');
                 }
             } else {
                 // 通常モード: まだ出題されていない選手から選択
@@ -124,23 +127,22 @@ class QuizController extends Controller
 
             $teamName = $correctPlayer->team->name;
 
-            // 同じチームの他の選手から3人をランダムに選択（選択肢）
-            $teamPlayersQuery = Player::where('team_id', $correctPlayer->team_id)
-                ->where('id', '!=', $correctPlayer->id);
-
-            $teamPlayers = $teamPlayersQuery->inRandomOrder()
+            // 選択肢の生成（常に同じチームの他の選手から選択）
+            $teamPlayers = Player::where('team_id', $correctPlayer->team_id)
+                ->where('id', '!=', $correctPlayer->id)
+                ->inRandomOrder()
                 ->take(3)
                 ->get();
 
             // 選択肢が3人に満たない場合、ダミーデータで補完
             while ($teamPlayers->count() < 3) {
                 $dummyPlayer = new Player();
-                $dummyPlayer->id = -1 * ($teamPlayers->count() + 1); // ダミーIDはマイナス値
+                $dummyPlayer->id = -1 * ($teamPlayers->count() + 1);
                 $dummyPlayer->name = '選手' . ($teamPlayers->count() + 1);
                 $teamPlayers->push($dummyPlayer);
             }
 
-            // 全ての選択肢をまとめる
+            // 正解の選手を選択肢に追加してシャッフル
             $choices = $teamPlayers->push($correctPlayer)->shuffle();
 
             return response()->json([
