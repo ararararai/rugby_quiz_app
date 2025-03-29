@@ -116,20 +116,7 @@ class QuizController extends Controller
 
             // 未出題の選手がいない場合、全出題完了とみなす
             if (!$correctPlayer) {
-                if ($isWrongOnly && !empty($wrongPlayerIds)) {
-                    // 間違えた選手モードの場合、もう一度最初からやり直す
-                    Log::info('Resetting asked IDs for wrong only mode');
-                    $correctPlayer = Player::where('team_id', $teamId)
-                        ->whereIn('id', $wrongPlayerIds)
-                        ->inRandomOrder()
-                        ->first();
-                    
-                    if (!$correctPlayer) {
-                        return response()->json(['error' => '選手データの取得に失敗しました', 'completed' => true], 404);
-                    }
-                } else {
-                    return response()->json(['error' => '全ての選手が出題されました', 'completed' => true], 404);
-                }
+                return response()->json(['error' => '全ての選手が出題されました', 'completed' => true], 404);
             }
 
             // 正解の選手を出題済みリストに追加
@@ -225,7 +212,6 @@ class QuizController extends Controller
         
         // 問題数の設定を取得
         $questionCount = request()->get('question_count', 'all');
-        $playerCount = $questionCount === '20' ? min(20, $totalPlayerCount) : $totalPlayerCount;
         
         // 間違えた選手のみモードの場合、playerCountを間違えた選手の数に設定
         $wrongOnly = request()->get('wrong_only');
@@ -236,6 +222,28 @@ class QuizController extends Controller
         // 'true'または'1'の場合に間違えた選手モードとして扱う
         $isWrongOnly = $wrongOnly === 'true' || $wrongOnly === '1';
         Log::info('Play method - isWrongOnly resolved to: ' . ($isWrongOnly ? 'true' : 'false'));
+        
+        // 間違えた選手のみモードの場合
+        if ($isWrongOnly && $wrongAnswers) {
+            try {
+                $wrongPlayerIds = json_decode($wrongAnswers, true) ?: [];
+                if (is_array($wrongPlayerIds)) {
+                    $wrongPlayerIds = array_map('intval', $wrongPlayerIds);
+                    $wrongPlayerIds = array_values(array_unique($wrongPlayerIds));
+                    // 間違えた選手の数に基づいて問題数を設定
+                    $playerCount = min(count($wrongPlayerIds), $questionCount === '20' ? 20 : count($wrongPlayerIds));
+                    Log::info('Wrong only mode - player count set to: ' . $playerCount);
+                } else {
+                    $playerCount = $questionCount === '20' ? min(20, $totalPlayerCount) : $totalPlayerCount;
+                }
+            } catch (\Exception $e) {
+                Log::error('Error processing wrong answers: ' . $e->getMessage());
+                $playerCount = $questionCount === '20' ? min(20, $totalPlayerCount) : $totalPlayerCount;
+            }
+        } else {
+            // 通常モードの場合
+            $playerCount = $questionCount === '20' ? min(20, $totalPlayerCount) : $totalPlayerCount;
+        }
         
         return view('quiz.index', compact('team', 'teamId', 'playerCount', 'questionCount'));
     }

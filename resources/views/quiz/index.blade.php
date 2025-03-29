@@ -324,94 +324,89 @@
                         return response.json();
                     })
                     .then(data => {
-                        displayResult(data);
+                        // 選択肢を無効化
+                        const choiceButtons = document.querySelectorAll('.choice-btn');
+                        choiceButtons.forEach(button => {
+                            button.disabled = true;
+                            if (button.dataset.id == data.correct_player.id) {
+                                button.classList.remove('btn-outline-secondary');
+                                button.classList.add('btn-success');
+                            }
+                        });
+
+                        // 正解数のカウント
+                        if (data.correct) {
+                            correctCount++;
+                        } else {
+                            // 間違えた選手を記録
+                            const correctPlayerId = parseInt(data.correct_player.id, 10);
+                            console.log('Recording wrong answer:', correctPlayerId);
+                            
+                            wrongAnswers.push({
+                                id: correctPlayerId,
+                                name: data.correct_player.name,
+                                team: data.correct_player.team,
+                                image: currentQuestion.question.player_image
+                            });
+                            
+                            console.log('Updated wrong answers:', wrongAnswers);
+
+                            // 間違えた選手のIDのリストを更新（間違えた選手のみモード用）
+                            if (isWrongOnly) {
+                                // 間違えた選手のIDを追加（まだリストにない場合）
+                                if (!wrongPlayerIds.includes(correctPlayerId)) {
+                                    wrongPlayerIds.push(correctPlayerId);
+                                    console.log('Updated wrong player IDs:', wrongPlayerIds);
+                                }
+                            }
+                        }
+
+                        // 進捗状況の更新
+                        updateProgress();
+
+                        // モーダルの内容を設定
+                        const resultTitle = document.getElementById('resultTitle');
+                        const resultModalBody = document.getElementById('resultModalBody');
+
+                        resultTitle.textContent = data.correct ? '正解！' : '不正解...';
+                        resultTitle.className = 'modal-title ' + (data.correct ? 'text-success' : 'text-danger');
+
+                        resultModalBody.innerHTML = `
+                            <p class="text-center">正解は <strong>${data.correct_player.name}</strong> (${data.correct_player.team}) です。</p>
+                        `;
+
+                        // モーダルを表示
+                        const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+                        resultModal.show();
+
+                        // 自動的に次の問題に進むタイマーをセット
+                        let secondsLeft = 3;
+                        document.getElementById('countdown').textContent = secondsLeft;
+
+                        const timer = setInterval(() => {
+                            secondsLeft--;
+                            document.getElementById('countdown').textContent = secondsLeft;
+
+                            if (secondsLeft <= 0) {
+                                clearInterval(timer);
+                                resultModal.hide();
+                                fetchQuestion(); // 次の問題を取得
+                            }
+                        }, 1000);
+
+                        // 「次へ」ボタンのイベントリスナー
+                        document.getElementById('nextBtn').addEventListener('click', () => {
+                            clearInterval(timer);
+                            resultModal.hide();
+                            fetchQuestion(); // 次の問題を取得
+                        }, {
+                            once: true
+                        });
                     })
                     .catch(error => {
                         console.error('Error checking answer:', error);
                         alert('回答の確認に失敗しました。\nエラー: ' + error.message);
                     });
-            }
-
-            // 結果を表示する関数（モーダル版）
-            function displayResult(data) {
-                // 選択肢を無効化
-                const choiceButtons = document.querySelectorAll('.choice-btn');
-                choiceButtons.forEach(button => {
-                    button.disabled = true;
-                    if (button.dataset.id == data.correct_player.id) {
-                        button.classList.remove('btn-outline-secondary');
-                        button.classList.add('btn-success');
-                    }
-                });
-
-                // 正解数のカウント
-                if (data.correct) {
-                    correctCount++;
-                } else {
-                    // 間違えた選手を記録
-                    const correctPlayerId = parseInt(data.correct_player.id, 10);
-                    console.log('Recording wrong answer:', correctPlayerId);
-                    
-                    wrongAnswers.push({
-                        id: correctPlayerId,
-                        name: data.correct_player.name,
-                        team: data.correct_player.team,
-                        image: currentQuestion.question.player_image
-                    });
-                    
-                    console.log('Updated wrong answers:', wrongAnswers);
-
-                    // 間違えた選手のIDのリストを更新（間違えた選手のみモード用）
-                    if (isWrongOnly) {
-                        // 間違えた選手のIDを追加（まだリストにない場合）
-                        if (!wrongPlayerIds.includes(correctPlayerId)) {
-                            wrongPlayerIds.push(correctPlayerId);
-                            console.log('Updated wrong player IDs:', wrongPlayerIds);
-                        }
-                    }
-                }
-
-                // 進捗状況の更新
-                updateProgress();
-
-                // モーダルの内容を設定
-                const resultTitle = document.getElementById('resultTitle');
-                const resultModalBody = document.getElementById('resultModalBody');
-
-                resultTitle.textContent = data.correct ? '正解！' : '不正解...';
-                resultTitle.className = 'modal-title ' + (data.correct ? 'text-success' : 'text-danger');
-
-                resultModalBody.innerHTML = `
-                    <p class="text-center">正解は <strong>${data.correct_player.name}</strong> (${data.correct_player.team}) です。</p>
-                `;
-
-                // モーダルを表示
-                const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-                resultModal.show();
-
-                // 自動的に次の問題に進むタイマーをセット
-                let secondsLeft = 3;
-                document.getElementById('countdown').textContent = secondsLeft;
-
-                const timer = setInterval(() => {
-                    secondsLeft--;
-                    document.getElementById('countdown').textContent = secondsLeft;
-
-                    if (secondsLeft <= 0) {
-                        clearInterval(timer);
-                        resultModal.hide();
-                        fetchQuestion(); // 次の問題を取得
-                    }
-                }, 1000);
-
-                // 「次へ」ボタンのイベントリスナー
-                document.getElementById('nextBtn').addEventListener('click', () => {
-                    clearInterval(timer);
-                    resultModal.hide();
-                    fetchQuestion(); // 次の問題を取得
-                }, {
-                    once: true
-                });
             }
 
             // 次の問題ボタンのイベントリスナー（現在は使われていませんが、念のため残しておく）

@@ -121,7 +121,8 @@
                         $wrongOnlyUrl = route('quiz.play', [
                             'team_id' => $team->id, 
                             'wrong_only' => 'true', 
-                            'wrong_answers' => $encodedWrongPlayerIds
+                            'wrong_answers' => $encodedWrongPlayerIds,
+                            'question_count' => $questionCount
                         ]);
                         error_log('Replay URL: ' . $wrongOnlyUrl);
                     @endphp
