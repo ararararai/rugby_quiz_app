@@ -221,13 +221,11 @@ class QuizController extends Controller
     public function play($teamId)
     {
         $team = Team::findOrFail($teamId);
-        $playerCount = Player::where('team_id', $teamId)->count();
+        $totalPlayerCount = Player::where('team_id', $teamId)->count();
         
         // 問題数の設定を取得
         $questionCount = request()->get('question_count', 'all');
-        if ($questionCount === '20') {
-            $playerCount = min(20, $playerCount);
-        }
+        $playerCount = $questionCount === '20' ? min(20, $totalPlayerCount) : $totalPlayerCount;
         
         // 間違えた選手のみモードの場合、playerCountを間違えた選手の数に設定
         $wrongOnly = request()->get('wrong_only');
@@ -239,38 +237,7 @@ class QuizController extends Controller
         $isWrongOnly = $wrongOnly === 'true' || $wrongOnly === '1';
         Log::info('Play method - isWrongOnly resolved to: ' . ($isWrongOnly ? 'true' : 'false'));
         
-        if ($isWrongOnly && $wrongAnswers) {
-            try {
-                // デコードして整数に変換して重複を削除
-                $decodedAnswers = json_decode($wrongAnswers, true);
-                
-                if (is_array($decodedAnswers)) {
-                    $wrongPlayerIds = array_map('intval', $decodedAnswers);
-                    $wrongPlayerIds = array_values(array_unique(array_filter($wrongPlayerIds)));
-                    
-                    Log::info('Wrong player IDs in play method: ' . json_encode($wrongPlayerIds));
-                    
-                    if (!empty($wrongPlayerIds)) {
-                        $playerCount = count($wrongPlayerIds);
-                        Log::info('Player count set to: ' . $playerCount);
-                        
-                        // 存在するプレイヤーIDか確認
-                        $existingCount = Player::whereIn('id', $wrongPlayerIds)->count();
-                        if ($existingCount !== count($wrongPlayerIds)) {
-                            Log::warning('Some wrong player IDs do not exist. Expected: ' . count($wrongPlayerIds) . ', Found: ' . $existingCount);
-                        }
-                    } else {
-                        Log::warning('Decoded wrong player IDs array is empty');
-                    }
-                } else {
-                    Log::warning('Decoded wrong answers is not an array: ' . gettype($decodedAnswers));
-                }
-            } catch (\Exception $e) {
-                Log::error('Error processing wrong answers in play method: ' . $e->getMessage());
-            }
-        }
-
-        return view('quiz.index', compact('teamId', 'playerCount'));
+        return view('quiz.index', compact('team', 'teamId', 'playerCount', 'questionCount'));
     }
     public function result(Request $request, $teamId)
     {

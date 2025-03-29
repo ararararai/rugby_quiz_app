@@ -137,6 +137,7 @@
 
             // グローバル変数
             const playerCount = {{ $playerCount ?? 0 }};
+            const questionCount = "{{ $questionCount ?? 'all' }}";
             let answeredCount = 0;
             let correctCount = 0;
             let wrongAnswers = [];
@@ -199,7 +200,7 @@
                 if (answeredCount >= playerCount) {
                     // 間違えた選手の情報をJSONとしてエンコードしてURLパラメータに追加
                     const wrongAnswersParam = encodeURIComponent(JSON.stringify(wrongAnswers));
-                    window.location.href = `/quiz/result/${teamId}?total=${answeredCount}&correct=${correctCount}&wrong=${wrongAnswersParam}`;
+                    window.location.href = `/quiz/result/${teamId}?total=${answeredCount}&correct=${correctCount}&wrong=${wrongAnswersParam}&question_count=${questionCount}`;
                     return;
                 }
                 loadingElement.style.display = 'block';

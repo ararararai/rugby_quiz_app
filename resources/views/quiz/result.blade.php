@@ -87,7 +87,14 @@
         </div>
 
         <div class="text-center">
-            <a href="{{ route('quiz.play', ['team_id' => $team->id]) }}" class="btn btn-primary btn-lg action-btn">もう一度プレイ</a>
+            @php
+                $questionCount = request()->get('question_count', 'all');
+                $replayUrl = route('quiz.play', [
+                    'team_id' => $team->id,
+                    'question_count' => $questionCount
+                ]);
+            @endphp
+            <a href="{{ $replayUrl }}" class="btn btn-primary btn-lg action-btn">もう一度プレイ</a>
             @if(count($wrongAnswers) > 0)
                 @php
                     // 間違えた選手のIDのみを抽出して確実に整数値に
