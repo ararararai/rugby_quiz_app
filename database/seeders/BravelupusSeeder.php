@@ -18,6 +18,7 @@ class BravelupusSeeder extends Seeder
             columnMap: [
                 'image' => 0,
                 'name' => 1,
+                'team' => 2,
             ],
             playerImagePrefix: 'players/bravelupus'
         );

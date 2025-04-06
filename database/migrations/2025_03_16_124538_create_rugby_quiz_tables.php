@@ -22,7 +22,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('english_name')->nullable();
             $table->string('image_path');
+            $table->string('team_name')->nullable();
             $table->string('detail_url')->nullable();
+            $table->boolean('is_japanese')->default(true);
             $table->foreignId('team_id')->constrained();
             $table->timestamps();
         });

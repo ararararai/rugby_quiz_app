@@ -18,6 +18,8 @@ class SpearsSeeder extends Seeder
             columnMap: [
                 'image' => 0,
                 'name' => 1,
+                'team' => 2,
+                'is_japanese' => 3,
             ],
             playerImagePrefix: 'players/spears'
         );

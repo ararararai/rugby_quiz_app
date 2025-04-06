@@ -372,8 +372,8 @@
                         resultTitle.className = 'modal-title ' + (data.correct ? 'text-success' : 'text-danger');
 
                         resultModalBody.innerHTML = `
-                            <p class="text-center">正解は <strong>${data.correct_player.name}</strong> (${data.correct_player.team}) です。</p>
-                        `;
+                            <p class="text-center">正解は <strong>${data.correct_player.name}</strong>(${data.correct_player.team}) です。</p>
+                        `
 
                         // モーダルを表示
                         const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));

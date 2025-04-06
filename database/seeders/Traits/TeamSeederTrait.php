@@ -53,9 +53,18 @@ trait TeamSeederTrait
                 ? $row[$columnMap['english_name']] 
                 : null;
             
+            $teamName = (isset($columnMap['team']) && isset($row[$columnMap['team']])) 
+                ? $row[$columnMap['team']] 
+                : $teamName;
+            
             $detailUrl = (isset($columnMap['detail_url']) && isset($row[$columnMap['detail_url']])) 
                 ? $row[$columnMap['detail_url']] 
                 : null;
+
+            // 日本人選手かどうかの情報を取得
+            $isJapanese = (isset($columnMap['is_japanese']) && isset($row[$columnMap['is_japanese']])) 
+                ? (int)$row[$columnMap['is_japanese']] 
+                : 1; // デフォルトは日本人選手とする
 
             // 選手情報の作成
             if (!empty($name)) {
@@ -64,9 +73,11 @@ trait TeamSeederTrait
                     'team_id' => $team->id,
                     'image_path' => $playerImagePrefix . '/' . $imagePath,
                     'english_name' => $englishName,
-                    'detail_url' => $detailUrl
+                    'team_name' => $teamName,
+                    'detail_url' => $detailUrl,
+                    'is_japanese' => $isJapanese
                 ]);
-                $this->command->info("選手追加: $name ($imagePath)");
+                $this->command->info("選手追加: $name ($imagePath) - " . ($isJapanese ? "日本人" : "外国人"));
             }
         }
         

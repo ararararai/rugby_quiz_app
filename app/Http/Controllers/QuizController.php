@@ -127,18 +127,22 @@ class QuizController extends Controller
 
             $teamName = $correctPlayer->team->name;
 
-            // 選択肢の生成（常に同じチームの他の選手から選択）
+            // 選択肢の生成（同じチームの他の選手から選択）
+            // 問題の選手と同じ国籍（日本人か外国人か）の選手のみを選択
+            $isJapanese = $correctPlayer->is_japanese;
+            
             $teamPlayers = Player::where('team_id', $correctPlayer->team_id)
                 ->where('id', '!=', $correctPlayer->id)
+                ->where('is_japanese', $isJapanese) // 同じ国籍の選手のみを選択
                 ->inRandomOrder()
                 ->take(3)
                 ->get();
-
-            // 選択肢が3人に満たない場合、ダミーデータで補完
+                
+            // 同じ国籍の選手が3人に満たない場合、ダミーデータで補完
             while ($teamPlayers->count() < 3) {
                 $dummyPlayer = new Player();
                 $dummyPlayer->id = -1 * ($teamPlayers->count() + 1);
-                $dummyPlayer->name = '選手' . ($teamPlayers->count() + 1);
+                $dummyPlayer->name = ($isJapanese ? '日本人選手' : '外国人選手') . ($teamPlayers->count() + 1);
                 $teamPlayers->push($dummyPlayer);
             }
 
@@ -178,14 +182,15 @@ class QuizController extends Controller
 
             $isCorrect = $correctPlayer->id === $answered->id;
 
-            $teamName = $correctPlayer->team ? $correctPlayer->team->name : 'チーム情報なし';
+            $teamName = $correctPlayer->team_name ?? 'チーム情報なし';
 
             return response()->json([
                 'correct' => $isCorrect,
                 'correct_player' => [
                     'id' => $correctPlayer->id,
                     'name' => $correctPlayer->name,
-                    'team' => $teamName
+                    'team' => $teamName,
+                    'is_japanese' => $correctPlayer->is_japanese
                 ]
             ]);
         } catch (\Exception $e) {

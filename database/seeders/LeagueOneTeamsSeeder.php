@@ -11,7 +11,7 @@ class LeagueOneTeamsSeeder extends Seeder
     {
         $teams = [
             ['name' => 'Japan', 'logo_path' => 'teams/logo_japan.jpg'],
-            ['name' => 'サントリーサンゴリアス', 'logo_path' => 'teams/logo_sungoliath.png'],
+            ['name' => '東京サントリーサンゴリアス', 'logo_path' => 'teams/logo_sungoliath.png'],
             ['name' => 'クボタスピアーズ船橋・東京ベイ', 'logo_path' => 'teams/logo_spears.png'],
             ['name' => '東芝ブレイブルーパス東京', 'logo_path' => 'teams/logo_bravelupus.png'],
             ['name' => '静岡ブルーレブズ', 'logo_path' => 'teams/logo_bluerevs.png'],
